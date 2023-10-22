@@ -1,8 +1,8 @@
 
 g++ -o t tictactoe.c
 
-if [ -f tictactoe_log.txt ]; then
-    rm tictactoe_log.txt
+if [ -f log.txt ]; then
+    rm log.txt
     echo "Log file removed"
 else
     echo "Log file not found"
