@@ -1,59 +1,56 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <time.h>
+#include <pthread.h>           
+#include <stdlib.h>     
+#include <time.h>        
+#include <unistd.h>
 
-void displayBoard(char board[3][3]) {
+
+void display(char gameboard[3][3]) {
     for (int row = 0; row < 3; row++) {
         for (int col = 0; col < 3; col++) {
-            printf("%c ", board[row][col]);
+            printf("%c ", gameboard[row][col]);
         }
         printf("\n");
     }
     printf("\n");
 }
 
-char checkResult(char board[3][3]) {
-    // Check rows
+char check(char gameboard[3][3]) {
     for (int row = 0; row < 3; row++) {
-        if (board[row][0] == board[row][1] && board[row][1] == board[row][2] && board[row][0] != '-') {
-            return board[row][0];
+        if (gameboard[row][0] == gameboard[row][1] && gameboard[row][1] == gameboard[row][2] && gameboard[row][0] != '-') {
+            return gameboard[row][0];
         }
     }
 
-    // Check columns
     for (int col = 0; col < 3; col++) {
-        if (board[0][col] == board[1][col] && board[1][col] == board[2][col] && board[0][col] != '-') {
-            return board[0][col];
+        if (gameboard[0][col] == gameboard[1][col] && gameboard[1][col] == gameboard[2][col] && gameboard[0][col] != '-') {
+            return gameboard[0][col];
         }
     }
 
-    // Check diagonals
-    if ((board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[0][0] != '-') ||
-        (board[0][2] == board[1][1] && board[1][1] == board[2][0] && board[0][2] != '-')) {
-        return board[1][1];
+    if ((gameboard[0][0] == gameboard[1][1] && gameboard[1][1] == gameboard[2][2] && gameboard[0][0] != '-') ||
+        (gameboard[0][2] == gameboard[1][1] && gameboard[1][1] == gameboard[2][0] && gameboard[0][2] != '-')) {
+        return gameboard[1][1];
     }
 
-    // Check for a draw
-    int emptyCells = 0;
+    int emptycell = 0;
     for (int row = 0; row < 3; row++) {
         for (int col = 0; col < 3; col++) {
-            if (board[row][col] == '-') {
-                emptyCells++;
+            if (gameboard[row][col] == '-') {
+                emptycell++;
             }
         }
     }
-    if (emptyCells == 0) {
+    if (emptycell == 0) {
         return 'D'; 
     }
-
     return '-'; 
 }
 
-void* playautomatedgame(void* arg) {
-    char board[3][3] = { {'-', '-', '-'}, {'-', '-', '-'}, {'-', '-', '-'} };
-    char currentPlayer = 'X';
-    int moves = 0;
+void* playgame(void* arg) {
+    char gameboard[3][3] = { {'-', '-', '-'}, {'-', '-', '-'}, {'-', '-', '-'} };
+    char player = 'X';
+    int turns = 0;
 
     while (1) {
         int row, col;
@@ -61,39 +58,38 @@ void* playautomatedgame(void* arg) {
         do {
             row = rand() % 3;
             col = rand() % 3;
-        } while (board[row][col] != '-');
+        } while (gameboard[row][col] != '-');
 
-        board[row][col] = currentPlayer;
-        moves++;
-        displayBoard(board);
+        gameboard[row][col] = player;
+        turns++;
+        display(gameboard);
 
-        char result = checkResult(board);
+        char res = check(gameboard);
 
-        if (result != '-') {
-            FILE *logFile = fopen("tictactoe_log.txt", "a");
-            if (logFile != NULL) {
-                fprintf(logFile, "Game result after %d moves: ", moves);
-                if (result == 'D') {
-                    fprintf(logFile, "Draw\n");
+        if (res != '-') {
+            FILE *logfile = fopen("log.txt", "a");
+            if (logfile != NULL) {
+                fprintf(logfile, "Game result after move %d : ", turns);
+                if (res == 'D') {
+                    fprintf(logfile, "Draw\n");
                 } else {
-                    fprintf(logFile, "Player %c wins\n", result);
+                    fprintf(logfile, "Player %c wins\n", res);
                 }
-                fclose(logFile);
+                fclose(logfile);
             }
-
             break;
         }
 
-        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        player = (player == 'X') ? 'O' : 'X';
     }
 }
 
 int main() {
-    pthread_t game;
+    srand((unsigned int)getpid());
 
-    pthread_create(&game, NULL, playautomatedgame,NULL);
-  
-    pthread_join(game, NULL);
+    pthread_t g;
+    pthread_create(&g, NULL, playgame,NULL);
+    pthread_join(g, NULL);
 
     return 0;
 }
